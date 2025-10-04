@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Verben mit Präpositionen • Тренажер</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-dvh bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+  <main class="max-w-3xl mx-auto p-4 sm:p-6">
+    <header class="mb-6 sm:mb-8 text-center">
+      <h1 class="text-3xl font-bold">Verben mit Präpositionen</h1>
+      <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400">DE → UA тренажер: обери правильний прийменник. Показано дієслово, український переклад і типовий відмінок.</p>
+    </header>
+
+    <!-- SETUP -->
+    <section id="setupCard" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-7 shadow">
+      <h2 class="text-lg font-semibold mb-3">Налаштування тесту</h2>
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+        <label class="flex-1">
+          <span class="block text-sm mb-1">Скільки питань показати?</span>
+          <input id="questionCount" type="number" min="5" max="100" value="20" class="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3" />
+        </label>
+        <button id="startBtn" class="rounded-2xl px-4 py-2 shadow bg-indigo-600 text-white">Почати тест</button>
+      </div>
+      <details class="mt-4">
+        <summary class="cursor-pointer text-sm text-slate-600 dark:text-slate-400">Підказка</summary>
+        <div class="mt-2 text-sm text-slate-700 dark:text-slate-300">
+          Приклади: warten <b>auf</b> + Akk, träumen <b>von</b> + Dat, sprechen <b>mit</b> + Dat / <b>über</b> + Akk.
+        </div>
+      </details>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="quizCard" class="hidden mt-6 bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-7 shadow">
+      <div class="flex items-center justify-between mb-4">
+        <div id="progress" class="text-sm text-slate-600 dark:text-slate-300">0 / 0</div>
+        <div id="scoreMini" class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-slate-100 dark:bg-slate-700">✅ 0</div>
+      </div>
+
+      <div id="questionBox" class="space-y-3">
+        <div class="text-sm text-slate-500">Дієслово • Переклад • Відмінок</div>
+        <h3 id="prompt" class="text-xl font-semibold"></h3>
+        <div id="options" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+      </div>
+
+      <div id="feedback" class="hidden mt-4 rounded-2xl border p-3"></div>
+      <p class="mt-4 text-sm text-slate-500 dark:text-slate-400">Натисни на варіант — відповідь перевіриться автоматично.</p>
+    </section>
+
+    <!-- RESULT -->
+    <section id="resultCard" class="hidden mt-6 bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-7 shadow">
+      <h2 class="text-xl font-semibold mb-2">Результат</h2>
+      <p id="resultScore" class="text-2xl font-bold"></p>
+      <details class="mt-4">
+        <summary class="cursor-pointer">Переглянути відповіді</summary>
+        <ul id="reviewList" class="mt-3 space-y-3 text-sm"></ul>
+      </details>
+      <div class="mt-5 flex gap-3">
+        <button id="restartBtn" class="rounded-2xl px-4 py-2 shadow bg-indigo-600 text-white">Спробувати ще раз</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // --- 50 найуживаніших сполук ---
+    const DATA = [
+      {verb:'warten', ua:'чекати', prep:'auf', kasus:'Akk'},
+      {verb:'träumen', ua:'мріяти', prep:'von', kasus:'Dat'},
+      {verb:'sprechen', ua:'говорити про', prep:'über', kasus:'Akk'},
+      {verb:'sprechen', ua:'говорити з', prep:'mit', kasus:'Dat'},
+      {verb:'sich ärgern', ua:'сердитися на', prep:'über', kasus:'Akk'},
+      {verb:'sich freuen', ua:'радіти (майбутнє)', prep:'auf', kasus:'Akk'},
+      {verb:'sich freuen', ua:'радіти (теперішнє/минуле)', prep:'über', kasus:'Akk'},
+      {verb:'sich kümmern', ua:'піклуватися про', prep:'um', kasus:'Akk'},
+      {verb:'danken', ua:'дякувати за', prep:'für', kasus:'Akk'},
+      {verb:'teilnehmen', ua:'брати участь у', prep:'an', kasus:'Dat'},
+      {verb:'bitten', ua:'просити про', prep:'um', kasus:'Akk'},
+      {verb:'erzählen', ua:'розповідати про (досвід)', prep:'von', kasus:'Dat'},
+      {verb:'erzählen', ua:'розповідати про (загалом)', prep:'über', kasus:'Akk'},
+      {verb:'denken', ua:'думати про', prep:'an', kasus:'Akk'},
+      {verb:'glauben', ua:'вірити в', prep:'an', kasus:'Akk'},
+      {verb:'suchen', ua:'шукати', prep:'nach', kasus:'Dat'},
+      {verb:'gehören', ua:'належати до', prep:'zu', kasus:'Dat'},
+      {verb:'abhängen', ua:'залежати від', prep:'von', kasus:'Dat'},
+      {verb:'sich bewerben', ua:'подаватися на', prep:'um', kasus:'Akk'},
+      {verb:'sich beschweren', ua:'скаржитися комусь', prep:'bei', kasus:'Dat'},
+      {verb:'sich beschweren', ua:'скаржитися на', prep:'über', kasus:'Akk'},
+      {verb:'einladen', ua:'запрошувати на/до', prep:'zu', kasus:'Dat'},
+      {verb:'gratulieren', ua:'вітати з', prep:'zu', kasus:'Dat'},
+      {verb:'sich interessieren', ua:'цікавитися', prep:'für', kasus:'Akk'},
+      {verb:'informieren', ua:'інформувати про', prep:'über', kasus:'Akk'},
+      {verb:'sich erkundigen', ua:'дізнаватися про', prep:'nach', kasus:'Dat'},
+      {verb:'reden', ua:'балакати про', prep:'über', kasus:'Akk'},
+      {verb:'reden', ua:'балакати з', prep:'mit', kasus:'Dat'},
+      {verb:'schreiben', ua:'писати комусь', prep:'an', kasus:'Akk'},
+      {verb:'helfen', ua:'допомагати при/в', prep:'bei', kasus:'Dat'},
+      {verb:'bestehen', ua:'складатися з', prep:'aus', kasus:'Dat'},
+      {verb:'lachen', ua:'сміятися з/над', prep:'über', kasus:'Akk'},
+      {verb:'Angst haben', ua:'боятися', prep:'vor', kasus:'Dat'},
+      {verb:'sich vorbereiten', ua:'готуватися до', prep:'auf', kasus:'Akk'},
+      {verb:'verzichten', ua:'відмовлятися від', prep:'auf', kasus:'Akk'},
+      {verb:'sich entscheiden', ua:'вирішуватися на', prep:'für', kasus:'Akk'},
+      {verb:'sich entschuldigen', ua:'вибачатися перед', prep:'bei', kasus:'Dat'},
+      {verb:'sich entschuldigen', ua:'вибачатися за', prep:'für', kasus:'Akk'},
+      {verb:'sich gewöhnen', ua:'звикати до', prep:'an', kasus:'Akk'},
+      {verb:'zweifeln', ua:'сумніватися в', prep:'an', kasus:'Dat'},
+      {verb:'diskutieren', ua:'дискутувати про', prep:'über', kasus:'Akk'},
+      {verb:'kämpfen', ua:'боротися за', prep:'für', kasus:'Akk'},
+      {verb:'kämpfen', ua:'боротися проти', prep:'gegen', kasus:'Akk'},
+      {verb:'arbeiten', ua:'працювати над', prep:'an', kasus:'Dat'},
+      {verb:'achten', ua:'зважати на', prep:'auf', kasus:'Akk'},
+      {verb:'ankommen (es kommt ... an)', ua:'залежати від', prep:'auf', kasus:'Akk'},
+      {verb:'hoffen', ua:'сподіватися на', prep:'auf', kasus:'Akk'},
+      {verb:'hinweisen', ua:'вказувати на', prep:'auf', kasus:'Akk'},
+      {verb:'schützen', ua:'захищати від', prep:'vor', kasus:'Dat'},
+      {verb:'retten', ua:'рятувати від', prep:'vor', kasus:'Dat'}
+    ];
+
+    // Переконаймося, що саме 50 елементів
+    // console.log('DATA length', DATA.length);
+
+    const ALL_PREPS = ['auf','an','über','mit','von','für','um','in','nach','zu','bei','aus','vor','gegen'];
+
+    let quiz = [];
+    let idx = 0;
+    let correct = 0;
+    let userAnswers = [];
+
+    const setupCard = document.getElementById('setupCard');
+    const quizCard = document.getElementById('quizCard');
+    const resultCard = document.getElementById('resultCard');
+    const questionCount = document.getElementById('questionCount');
+    const startBtn = document.getElementById('startBtn');
+    const progress = document.getElementById('progress');
+    const scoreMini = document.getElementById('scoreMini');
+    const promptEl = document.getElementById('prompt');
+    const optionsEl = document.getElementById('options');
+    const feedback = document.getElementById('feedback');
+    const resultScore = document.getElementById('resultScore');
+    const reviewList = document.getElementById('reviewList');
+    const restartBtn = document.getElementById('restartBtn');
+
+    function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]); }
+
+    function sampleQuestions(n){
+      const pool = shuffle([...DATA]);
+      return pool.slice(0, Math.min(n, pool.length));
+    }
+
+    function makeOptions(correctPrep){
+      const distractors = shuffle(ALL_PREPS.filter(p=>p!==correctPrep)).slice(0,4);
+      return shuffle([correctPrep, ...distractors]);
+    }
+
+    function disableOptions(){
+      document.querySelectorAll('input[name="opt"]').forEach(r=>r.disabled = true);
+    }
+
+    function renderQuestion(){
+      const q = quiz[idx];
+      progress.textContent = (idx+1) + ' / ' + quiz.length;
+      scoreMini.textContent = '✅ ' + correct;
+      promptEl.innerHTML = '<span class="font-semibold">' + q.verb + '</span> ' +
+        '<span class="text-slate-500">(' + q.ua + ')</span> — ' +
+        '<span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-slate-100 dark:bg-slate-700">' + q.kasus + '</span>';
+
+      const opts = makeOptions(q.prep);
+      optionsEl.innerHTML = '';
+      opts.forEach(function(p, i){
+        const id = 'opt-' + idx + '-' + i;
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = 'opt';
+        input.id = id;
+        input.value = p;
+        input.className = 'hidden peer';
+
+        const label = document.createElement('label');
+        label.setAttribute('for', id);
+        label.className = 'flex items-center justify-center rounded-2xl px-4 py-2 shadow bg-slate-100 dark:bg-slate-700 peer-checked:ring-2 ring-indigo-500';
+        label.textContent = p;
+
+        input.addEventListener('change', function(){ handleChoice(p); });
+
+        const wrap = document.createElement('div');
+        wrap.appendChild(input);
+        wrap.appendChild(label);
+        optionsEl.appendChild(wrap);
+      });
+
+      feedback.classList.add('hidden');
+      feedback.textContent = '';
+      feedback.className = 'hidden mt-4 rounded-2xl border p-3';
+    }
+
+    function grade(chosenValue){
+      const q = quiz[idx];
+      const ok = chosenValue === q.prep;
+      userAnswers.push({q, chosen: chosenValue, correct: ok});
+      disableOptions();
+
+      if(ok){
+        correct++;
+        feedback.className = 'mt-4 rounded-2xl border p-3 bg-green-50 dark:bg-green-900/20 border-green-300';
+        feedback.innerHTML = '✅ Правильно! <b>' + q.verb + '</b> → <b>' + q.prep + '</b> + ' + q.kasus;
+      } else {
+        feedback.className = 'mt-4 rounded-2xl border p-3 bg-rose-50 dark:bg-rose-900/20 border-rose-300';
+        feedback.innerHTML = '❌ Неправильно. Правильно: <b>' + q.verb + '</b> → <b>' + q.prep + '</b> + ' + q.kasus;
+      }
+      feedback.classList.remove('hidden');
+    }
+
+    function handleChoice(val){
+      grade(val);
+      setTimeout(function(){
+        idx++;
+        if(idx < quiz.length){
+          renderQuestion();
+        } else {
+          finish();
+        }
+      }, 2000);
+    }
+
+    function finish(){
+      quizCard.classList.add('hidden');
+      resultCard.classList.remove('hidden');
+      const pct = Math.round((correct/quiz.length)*100);
+      let color = 'text-rose-600';
+      if(pct >= 95) color = 'text-emerald-600';
+      else if(pct >= 75) color = 'text-amber-600';
+      resultScore.className = 'text-2xl font-bold ' + color;
+      resultScore.textContent = 'Ваш результат: ' + correct + ' / ' + quiz.length + ' (' + pct + '%)';
+
+      reviewList.innerHTML = '';
+      userAnswers.forEach(function(it, i){
+        const li = document.createElement('li');
+        const right = it.correct ? '✅' : '❌';
+        li.innerHTML = right + ' <b>' + (i+1) + '.</b> ' + it.q.verb + ' <span class="text-slate-500">(' + it.q.ua + ')</span> — ' + it.q.kasus + '<br>' +
+          '<span class="ml-6">Твій вибір: <b>' + it.chosen + '</b> · Правильно: <b>' + it.q.prep + '</b></span>';
+        li.className = 'rounded-xl border border-slate-200 dark:border-slate-700 p-3';
+        reviewList.appendChild(li);
+      });
+    }
+
+    startBtn.addEventListener('click', function(){
+      const n = parseInt(questionCount.value, 10);
+      quiz = sampleQuestions(n);
+      idx = 0; correct = 0; userAnswers = [];
+      setupCard.classList.add('hidden');
+      resultCard.classList.add('hidden');
+      quizCard.classList.remove('hidden');
+      renderQuestion();
+    });
+
+    restartBtn.addEventListener('click', function(){
+      setupCard.classList.remove('hidden');
+      resultCard.classList.add('hidden');
+    });
+  </script>
+</body>
+</html>
