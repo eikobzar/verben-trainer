@@ -16,13 +16,18 @@
     <!-- SETUP -->
     <section id="setupCard" class="bg-white dark:bg-slate-800 rounded-3xl p-5 sm:p-7 shadow">
       <h2 class="text-lg font-semibold mb-3">Налаштування тесту</h2>
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
         <label class="flex-1">
           <span class="block text-sm mb-1">Скільки питань показати?</span>
           <input id="questionCount" type="number" min="5" max="100" value="20" class="w-full rounded-2xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3" />
         </label>
-        <button id="startBtn" class="rounded-2xl px-4 py-2 shadow bg-indigo-600 text-white">Почати тест</button>
+        <div class="flex flex-wrap gap-2">
+          <button id="startBtn" class="rounded-2xl px-4 py-2 shadow bg-indigo-600 text-white">Почати тест</button>
+          <button id="repeatMistakesBtn" class="rounded-2xl px-4 py-2 shadow bg-amber-500 text-white">Повторити помилки 🔁</button>
+          <button id="resetProgressBtn" class="rounded-2xl px-4 py-2 shadow bg-rose-600 text-white">Скинути прогрес 🗑️</button>
+        </div>
       </div>
+      <div class="mt-3 text-sm text-slate-600 dark:text-slate-300" id="masteredInfo"></div>
       <details class="mt-4">
         <summary class="cursor-pointer text-sm text-slate-600 dark:text-slate-400">Підказка</summary>
         <div class="mt-2 text-sm text-slate-700 dark:text-slate-300">
@@ -64,63 +69,129 @@
 
   <script>
     // --- 50 найуживаніших сполук ---
-    const DATA = [
-      {verb:'warten', ua:'чекати', prep:'auf', kasus:'Akk'},
-      {verb:'träumen', ua:'мріяти', prep:'von', kasus:'Dat'},
-      {verb:'sprechen', ua:'говорити про', prep:'über', kasus:'Akk'},
-      {verb:'sprechen', ua:'говорити з', prep:'mit', kasus:'Dat'},
-      {verb:'sich ärgern', ua:'сердитися на', prep:'über', kasus:'Akk'},
-      {verb:'sich freuen', ua:'радіти (майбутнє)', prep:'auf', kasus:'Akk'},
-      {verb:'sich freuen', ua:'радіти (теперішнє/минуле)', prep:'über', kasus:'Akk'},
-      {verb:'sich kümmern', ua:'піклуватися про', prep:'um', kasus:'Akk'},
-      {verb:'danken', ua:'дякувати за', prep:'für', kasus:'Akk'},
-      {verb:'teilnehmen', ua:'брати участь у', prep:'an', kasus:'Dat'},
-      {verb:'bitten', ua:'просити про', prep:'um', kasus:'Akk'},
-      {verb:'erzählen', ua:'розповідати про (досвід)', prep:'von', kasus:'Dat'},
-      {verb:'erzählen', ua:'розповідати про (загалом)', prep:'über', kasus:'Akk'},
-      {verb:'denken', ua:'думати про', prep:'an', kasus:'Akk'},
-      {verb:'glauben', ua:'вірити в', prep:'an', kasus:'Akk'},
-      {verb:'suchen', ua:'шукати', prep:'nach', kasus:'Dat'},
-      {verb:'gehören', ua:'належати до', prep:'zu', kasus:'Dat'},
-      {verb:'abhängen', ua:'залежати від', prep:'von', kasus:'Dat'},
-      {verb:'sich bewerben', ua:'подаватися на', prep:'um', kasus:'Akk'},
-      {verb:'sich beschweren', ua:'скаржитися комусь', prep:'bei', kasus:'Dat'},
-      {verb:'sich beschweren', ua:'скаржитися на', prep:'über', kasus:'Akk'},
-      {verb:'einladen', ua:'запрошувати на/до', prep:'zu', kasus:'Dat'},
-      {verb:'gratulieren', ua:'вітати з', prep:'zu', kasus:'Dat'},
-      {verb:'sich interessieren', ua:'цікавитися', prep:'für', kasus:'Akk'},
-      {verb:'informieren', ua:'інформувати про', prep:'über', kasus:'Akk'},
-      {verb:'sich erkundigen', ua:'дізнаватися про', prep:'nach', kasus:'Dat'},
-      {verb:'reden', ua:'балакати про', prep:'über', kasus:'Akk'},
-      {verb:'reden', ua:'балакати з', prep:'mit', kasus:'Dat'},
-      {verb:'schreiben', ua:'писати комусь', prep:'an', kasus:'Akk'},
-      {verb:'helfen', ua:'допомагати при/в', prep:'bei', kasus:'Dat'},
-      {verb:'bestehen', ua:'складатися з', prep:'aus', kasus:'Dat'},
-      {verb:'lachen', ua:'сміятися з/над', prep:'über', kasus:'Akk'},
-      {verb:'Angst haben', ua:'боятися', prep:'vor', kasus:'Dat'},
-      {verb:'sich vorbereiten', ua:'готуватися до', prep:'auf', kasus:'Akk'},
-      {verb:'verzichten', ua:'відмовлятися від', prep:'auf', kasus:'Akk'},
-      {verb:'sich entscheiden', ua:'вирішуватися на', prep:'für', kasus:'Akk'},
-      {verb:'sich entschuldigen', ua:'вибачатися перед', prep:'bei', kasus:'Dat'},
-      {verb:'sich entschuldigen', ua:'вибачатися за', prep:'für', kasus:'Akk'},
-      {verb:'sich gewöhnen', ua:'звикати до', prep:'an', kasus:'Akk'},
-      {verb:'zweifeln', ua:'сумніватися в', prep:'an', kasus:'Dat'},
-      {verb:'diskutieren', ua:'дискутувати про', prep:'über', kasus:'Akk'},
-      {verb:'kämpfen', ua:'боротися за', prep:'für', kasus:'Akk'},
-      {verb:'kämpfen', ua:'боротися проти', prep:'gegen', kasus:'Akk'},
-      {verb:'arbeiten', ua:'працювати над', prep:'an', kasus:'Dat'},
-      {verb:'achten', ua:'зважати на', prep:'auf', kasus:'Akk'},
-      {verb:'ankommen (es kommt ... an)', ua:'залежати від', prep:'auf', kasus:'Akk'},
-      {verb:'hoffen', ua:'сподіватися на', prep:'auf', kasus:'Akk'},
-      {verb:'hinweisen', ua:'вказувати на', prep:'auf', kasus:'Akk'},
-      {verb:'schützen', ua:'захищати від', prep:'vor', kasus:'Dat'},
-      {verb:'retten', ua:'рятувати від', prep:'vor', kasus:'Dat'}
-    ];
-
-    // Переконаймося, що саме 50 елементів
-    // console.log('DATA length', DATA.length);
+const DATA = [
+  {verb:'warten', ua:'чекати', prep:'auf', kasus:'Akk'},
+  {verb:'träumen', ua:'мріяти', prep:'von', kasus:'Dat'},
+  {verb:'sprechen', ua:'говорити про', prep:'über', kasus:'Akk'},
+  {verb:'sprechen', ua:'говорити з', prep:'mit', kasus:'Dat'},
+  {verb:'sich ärgern', ua:'сердитися на', prep:'über', kasus:'Akk'},
+  {verb:'sich freuen', ua:'радіти (майбутнє)', prep:'auf', kasus:'Akk'},
+  {verb:'sich freuen', ua:'радіти (факт/теперішнє)', prep:'über', kasus:'Akk'},
+  {verb:'sich kümmern', ua:'піклуватися про', prep:'um', kasus:'Akk'},
+  {verb:'danken', ua:'дякувати за', prep:'für', kasus:'Akk'},
+  {verb:'teilnehmen', ua:'брати участь у', prep:'an', kasus:'Dat'},
+  {verb:'bitten', ua:'просити про', prep:'um', kasus:'Akk'},
+  {verb:'erzählen', ua:'розповідати про (досвід)', prep:'von', kasus:'Dat'},
+  {verb:'erzählen', ua:'розповідати про (загалом)', prep:'über', kasus:'Akk'},
+  {verb:'denken', ua:'думати про', prep:'an', kasus:'Akk'},
+  {verb:'glauben', ua:'вірити в', prep:'an', kasus:'Akk'},
+  {verb:'suchen', ua:'шукати (когось/щось)', prep:'nach', kasus:'Dat'},
+  {verb:'gehören', ua:'належати до', prep:'zu', kasus:'Dat'},
+  {verb:'abhängen', ua:'залежати від', prep:'von', kasus:'Dat'},
+  {verb:'sich bewerben', ua:'подаватися на', prep:'um', kasus:'Akk'},
+  {verb:'sich beschweren', ua:'скаржитися комусь', prep:'bei', kasus:'Dat'},
+  {verb:'sich beschweren', ua:'скаржитися на', prep:'über', kasus:'Akk'},
+  {verb:'einladen', ua:'запрошувати на/до', prep:'zu', kasus:'Dat'},
+  {verb:'gratulieren', ua:'вітати з', prep:'zu', kasus:'Dat'},
+  {verb:'sich interessieren', ua:'цікавитися', prep:'für', kasus:'Akk'},
+  {verb:'informieren', ua:'інформувати про', prep:'über', kasus:'Akk'},
+  {verb:'sich erkundigen', ua:'дізнаватися про', prep:'nach', kasus:'Dat'},
+  {verb:'reden', ua:'балакати про', prep:'über', kasus:'Akk'},
+  {verb:'reden', ua:'балакати з', prep:'mit', kasus:'Dat'},
+  {verb:'schreiben', ua:'писати комусь', prep:'an', kasus:'Akk'},
+  {verb:'schreiben', ua:'писати про', prep:'über', kasus:'Akk'},
+  {verb:'helfen', ua:'допомагати у/при', prep:'bei', kasus:'Dat'},
+  {verb:'bestehen', ua:'складатися з', prep:'aus', kasus:'Dat'},
+  {verb:'bestehen', ua:'наполягати на', prep:'auf', kasus:'Dat'},
+  {verb:'lachen', ua:'сміятися з/над', prep:'über', kasus:'Akk'},
+  {verb:'Angst haben', ua:'боятися', prep:'vor', kasus:'Dat'},
+  {verb:'sich vorbereiten', ua:'готуватися до', prep:'auf', kasus:'Akk'},
+  {verb:'verzichten', ua:'відмовлятися від', prep:'auf', kasus:'Akk'},
+  {verb:'sich entscheiden', ua:'вирішуватися на користь', prep:'für', kasus:'Akk'},
+  {verb:'sich entscheiden', ua:'вирішуватися проти', prep:'gegen', kasus:'Akk'},
+  {verb:'sich entschuldigen', ua:'вибачатися перед', prep:'bei', kasus:'Dat'},
+  {verb:'sich entschuldigen', ua:'вибачатися за', prep:'für', kasus:'Akk'},
+  {verb:'sich gewöhnen', ua:'звикати до', prep:'an', kasus:'Akk'},
+  {verb:'zweifeln', ua:'сумніватися в', prep:'an', kasus:'Dat'},
+  {verb:'diskutieren', ua:'дискутувати про', prep:'über', kasus:'Akk'},
+  {verb:'diskutieren', ua:'дискутувати з', prep:'mit', kasus:'Dat'},
+  {verb:'kämpfen', ua:'боротися за', prep:'für', kasus:'Akk'},
+  {verb:'kämpfen', ua:'боротися проти', prep:'gegen', kasus:'Akk'},
+  {verb:'arbeiten', ua:'працювати над', prep:'an', kasus:'Dat'},
+  {verb:'achten', ua:'зважати/звертати увагу на', prep:'auf', kasus:'Akk'},
+  {verb:'ankommen', ua:'залежати від (es kommt …)', prep:'auf', kasus:'Akk'},
+  {verb:'hoffen', ua:'сподіватися на', prep:'auf', kasus:'Akk'},
+  {verb:'hinweisen', ua:'вказувати на', prep:'auf', kasus:'Akk'},
+  {verb:'schützen', ua:'захищати від', prep:'vor', kasus:'Dat'},
+  {verb:'retten', ua:'рятувати від', prep:'vor', kasus:'Dat'},
+  {verb:'sich wenden', ua:'звертатися до', prep:'an', kasus:'Akk'},
+  {verb:'sich erinnern', ua:'пам’ятати/згадувати про', prep:'an', kasus:'Akk'},
+  {verb:'sich verlassen', ua:'покладатися на', prep:'auf', kasus:'Akk'},
+  {verb:'sich beschäftigen', ua:'займатися чимось', prep:'mit', kasus:'Dat'},
+  {verb:'sich trennen', ua:'розлучатися/розставатися з', prep:'von', kasus:'Dat'},
+  {verb:'sich bedanken', ua:'дякувати комусь', prep:'bei', kasus:'Dat'},
+  {verb:'sich bedanken', ua:'дякувати за', prep:'für', kasus:'Akk'},
+  {verb:'sich befreien', ua:'звільнятися від', prep:'von', kasus:'Dat'},
+  {verb:'sich beschränken', ua:'обмежуватися чимось', prep:'auf', kasus:'Akk'},
+  {verb:'sich beziehen', ua:'посилатися на', prep:'auf', kasus:'Akk'},
+  {verb:'sich bekennen', ua:'визнавати/декларувати належність до', prep:'zu', kasus:'Dat'},
+  {verb:'sich bemühen', ua:'старатися/дбати про', prep:'um', kasus:'Akk'},
+  {verb:'sich eignen', ua:'підходити для', prep:'für', kasus:'Akk'},
+  {verb:'sich konzentrieren', ua:'зосереджуватися на', prep:'auf', kasus:'Akk'},
+  {verb:'sich sorgen', ua:'хвилюватися за', prep:'um', kasus:'Akk'},
+  {verb:'sich verabschieden', ua:'прощатися з', prep:'von', kasus:'Dat'},
+  {verb:'sich verlieben', ua:'закохатися в', prep:'in', kasus:'Akk'},
+  {verb:'sich wundern', ua:'дивуватися з/чому', prep:'über', kasus:'Akk'},
+  {verb:'teilhaben', ua:'мати частку/брати участь у', prep:'an', kasus:'Dat'},
+  {verb:'sterben', ua:'померти від', prep:'an', kasus:'Dat'},
+  {verb:'leiden', ua:'страждати на (хворобу)', prep:'an', kasus:'Dat'},
+  {verb:'leiden', ua:'страждати від (умов/тиску)', prep:'unter', kasus:'Dat'},
+  {verb:'nachdenken', ua:'обдумувати/розмірковувати над', prep:'über', kasus:'Akk'},
+  {verb:'fragen', ua:'питати про', prep:'nach', kasus:'Dat'},
+  {verb:'führen', ua:'призводити до', prep:'zu', kasus:'Dat'},
+  {verb:'geraten', ua:'потрапити у/в', prep:'in', kasus:'Akk'},
+  {verb:'halten', ua:'вважати за (когось/щось кимось)', prep:'für', kasus:'Akk'},
+  {verb:'halten', ua:'мати думку про', prep:'von', kasus:'Dat'},
+  {verb:'handeln', ua:'йтися про (бути про)', prep:'von', kasus:'Dat'},
+  {verb:'sich handeln', ua:'йтися про', prep:'um', kasus:'Akk'},
+  {verb:'klagen', ua:'скаржитися на', prep:'über', kasus:'Akk'},
+  {verb:'kommen', ua:'походити з/приходити з', prep:'aus', kasus:'Dat'},
+  {verb:'kommen', ua:'дійти до/призвести до', prep:'zu', kasus:'Dat'},
+  {verb:'protestieren', ua:'протестувати проти', prep:'gegen', kasus:'Akk'},
+  {verb:'reagieren', ua:'реагувати на', prep:'auf', kasus:'Akk'},
+  {verb:'riechen', ua:'пахнути/віддавати чимось', prep:'nach', kasus:'Dat'},
+  {verb:'sagen', ua:'висловлюватися щодо', prep:'zu', kasus:'Dat'},
+  {verb:'schimpfen', ua:'лаятися/нарікати на', prep:'über', kasus:'Akk'},
+  {verb:'sich sehnen', ua:'тужити/сумувати за', prep:'nach', kasus:'Dat'},
+  {verb:'sich streiten', ua:'сперечатися про', prep:'über', kasus:'Akk'},
+  {verb:'sich streiten', ua:'сперечатися з', prep:'mit', kasus:'Dat'},
+  {verb:'sich streiten', ua:'сваритися за (ресурс)', prep:'um', kasus:'Akk'},
+  {verb:'sich unterhalten', ua:'розмовляти про', prep:'über', kasus:'Akk'},
+  {verb:'sich unterhalten', ua:'спілкуватися з', prep:'mit', kasus:'Dat'},
+  {verb:'telefonieren', ua:'телефонувати з', prep:'mit', kasus:'Dat'},
+  {verb:'warnen', ua:'попереджати про/від', prep:'vor', kasus:'Dat'}
+];
 
     const ALL_PREPS = ['auf','an','über','mit','von','für','um','in','nach','zu','bei','aus','vor','gegen'];
+
+    // === ПРОГРЕС КОРИСТУВАЧА (localStorage) ===
+    const STREAKS_KEY = 'vmpp_streaks_v1'; // { 'verb|prep': number }
+    const MISTAKES_KEY = 'vmpp_mistakes_v1'; // Array of questions
+    const MASTERED_THRESHOLD = 3; // після 3 правильних — виключати
+
+    function getStreaks(){ try { return JSON.parse(localStorage.getItem(STREAKS_KEY)||'{}'); } catch(e){ return {}; } }
+    function setStreaks(obj){ localStorage.setItem(STREAKS_KEY, JSON.stringify(obj)); }
+    function getMistakes(){ try { return JSON.parse(localStorage.getItem(MISTAKES_KEY)||'[]'); } catch(e){ return []; } }
+    function setMistakes(arr){ localStorage.setItem(MISTAKES_KEY, JSON.stringify(arr)); }
+    function keyOf(q){ return q.verb+'|'+q.prep; }
+    function upsertStreak(q, ok){
+      const k = keyOf(q); const st = getStreaks();
+      if(ok){ st[k] = (st[k]||0) + 1; } else { st[k] = 0; }
+      setStreaks(st);
+    }
+    function addMistake(q){ const m = getMistakes(); if(!m.some(x=>x.verb===q.verb && x.prep===q.prep)){ m.push(q); setMistakes(m);} }
+    function removeMistake(q){ const m = getMistakes().filter(x=> !(x.verb===q.verb && x.prep===q.prep)); setMistakes(m); }
+    function isMastered(q){ const st = getStreaks(); return (st[keyOf(q)]||0) >= MASTERED_THRESHOLD; }
 
     let quiz = [];
     let idx = 0;
@@ -132,6 +203,8 @@
     const resultCard = document.getElementById('resultCard');
     const questionCount = document.getElementById('questionCount');
     const startBtn = document.getElementById('startBtn');
+    const repeatMistakesBtn = document.getElementById('repeatMistakesBtn');
+    const resetProgressBtn = document.getElementById('resetProgressBtn');
     const progress = document.getElementById('progress');
     const scoreMini = document.getElementById('scoreMini');
     const promptEl = document.getElementById('prompt');
@@ -140,6 +213,7 @@
     const resultScore = document.getElementById('resultScore');
     const reviewList = document.getElementById('reviewList');
     const restartBtn = document.getElementById('restartBtn');
+    const masteredInfo = document.getElementById('masteredInfo');
 
     function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]); }
 
@@ -161,9 +235,12 @@
       const q = quiz[idx];
       progress.textContent = (idx+1) + ' / ' + quiz.length;
       scoreMini.textContent = '✅ ' + correct;
+      const st = getStreaks()[keyOf(q)] || 0;
+      const star = st >= MASTERED_THRESHOLD ? ' ⭐' : '';
       promptEl.innerHTML = '<span class="font-semibold">' + q.verb + '</span> ' +
         '<span class="text-slate-500">(' + q.ua + ')</span> — ' +
-        '<span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-slate-100 dark:bg-slate-700">' + q.kasus + '</span>';
+        '<span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium bg-slate-100 dark:bg-slate-700">' + q.kasus + '</span>' +
+        (st ? ' <span class="ml-2 text-xs text-slate-500">серія: ' + st + star + '</span>' : '');
 
       const opts = makeOptions(q.prep);
       optionsEl.innerHTML = '';
@@ -200,13 +277,20 @@
       userAnswers.push({q, chosen: chosenValue, correct: ok});
       disableOptions();
 
+      // оновити серію і список помилок
+      upsertStreak(q, ok);
+      if(ok){ removeMistake(q); } else { addMistake(q); }
+
       if(ok){
         correct++;
         feedback.className = 'mt-4 rounded-2xl border p-3 bg-green-50 dark:bg-green-900/20 border-green-300';
-        feedback.innerHTML = '✅ Правильно! <b>' + q.verb + '</b> → <b>' + q.prep + '</b> + ' + q.kasus;
+        const st = (getStreaks()[keyOf(q)]||0);
+        feedback.innerHTML = '✅ Правильно! <b>' + q.verb + '</b> → <b>' + q.prep + '</b> + ' + q.kasus +
+          (st >= MASTERED_THRESHOLD ? '<br><span class="text-emerald-700">⭐ Засвоєно: 3 правильні поспіль — це слово буде приховано в наступних сесіях.</span>' : '<br><span class="text-slate-600">Серія: ' + st + '</span>');
       } else {
         feedback.className = 'mt-4 rounded-2xl border p-3 bg-rose-50 dark:bg-rose-900/20 border-rose-300';
-        feedback.innerHTML = '❌ Неправильно. Правильно: <b>' + q.verb + '</b> → <b>' + q.prep + '</b> + ' + q.kasus;
+        feedback.innerHTML = '❌ Неправильно. Правильно: <b>' + q.verb + '</b> → <b>' + q.prep + '</b> + ' + q.kasus +
+          '<br><span class="text-rose-700">Серія скинута до 0 — слово знову тренується.</span>';
       }
       feedback.classList.remove('hidden');
     }
@@ -220,7 +304,13 @@
         } else {
           finish();
         }
-      }, 2000);
+      }, 1500);
+    }
+
+    function updateMasteredInfo(){
+      const st = getStreaks();
+      const mastered = Object.values(st).filter(v=> v >= MASTERED_THRESHOLD).length;
+      masteredInfo.textContent = mastered ? `Засвоєно (приховано): ${mastered}` : '';
     }
 
     function finish(){
@@ -242,11 +332,18 @@
         li.className = 'rounded-xl border border-slate-200 dark:border-slate-700 p-3';
         reviewList.appendChild(li);
       });
+      updateMasteredInfo();
     }
 
+    // Start: 1) помилки першими 2) виключити засвоєні (>=3)
     startBtn.addEventListener('click', function(){
       const n = parseInt(questionCount.value, 10);
-      quiz = sampleQuestions(n);
+      const mistakes = getMistakes();
+      const pool = DATA.filter(d=> !isMastered(d));
+      let combined = shuffle(mistakes.concat(pool.filter(d=> !mistakes.some(m=> m.verb===d.verb && m.prep===d.prep))));
+      if(combined.length === 0){ combined = shuffle([...DATA]); }
+      quiz = combined.slice(0, Math.min(n, combined.length));
+
       idx = 0; correct = 0; userAnswers = [];
       setupCard.classList.add('hidden');
       resultCard.classList.add('hidden');
@@ -257,7 +354,33 @@
     restartBtn.addEventListener('click', function(){
       setupCard.classList.remove('hidden');
       resultCard.classList.add('hidden');
+      updateMasteredInfo();
     });
+
+    // Повторити тільки помилки
+    repeatMistakesBtn.addEventListener('click', function(){
+      const mistakes = getMistakes();
+      if(!mistakes.length){ alert('Немає помилок для повторення — все правильно! ✅'); return; }
+      quiz = shuffle(mistakes);
+      idx = 0; correct = 0; userAnswers = [];
+      setupCard.classList.add('hidden');
+      resultCard.classList.add('hidden');
+      quizCard.classList.remove('hidden');
+      renderQuestion();
+    });
+
+    // Скинути прогрес (серії та помилки)
+    resetProgressBtn.addEventListener('click', function(){
+      if(confirm('Скинути усі серії й помилки? Цю дію не можна відмінити.')){
+        localStorage.removeItem(STREAKS_KEY);
+        localStorage.removeItem(MISTAKES_KEY);
+        alert('Прогрес очищено. Всі слова знову в тренуванні.');
+        updateMasteredInfo();
+      }
+    });
+
+    // Ініціалізація лічильника засвоєних
+    updateMasteredInfo();
   </script>
 </body>
 </html>
